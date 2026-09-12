@@ -2,6 +2,13 @@ const app = new PIXI.Application({
   resizeTo: window,
   backgroundColor: 0x0a0a12
 });
+
+const link = document.createElement('link');
+link.rel = 'icon';
+link.type = 'image/svg+xml';
+link.href = 'favicon.svg';
+document.head.appendChild(link);
+
 document.body.appendChild(app.view);
 
 const mouse = { x: 0, y: 0 };
