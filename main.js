@@ -128,7 +128,7 @@ dncButton.on('pointerdown', () => {
   if (jumpscareArmed || jumpscareActive) return; 
   jumpscareArmed = true;
   jumpscareTimer = 2000;
-  dncText.text = 'i warned you!';
+  dncText.text ='What\'d you expect?';
 });
 
 const infoButton = new PIXI.Container();
