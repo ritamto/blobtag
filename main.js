@@ -29,6 +29,23 @@ eyeR.beginFill(0x0a0a12);
 eyeR.drawCircle(18, -5, 4);
 eyeR.endFill();
 
+// party hat
+const hat = new PIXI.Graphics();
+hat.beginFill(0xffcc33);
+hat.moveTo(-22, -48);
+hat.lineTo(22, -48);
+hat.lineTo(0, -100);
+hat.lineTo(-22, -48);
+hat.endFill();
+hat.beginFill(0xff3399);
+hat.drawRect(-22, -50, 44, 6); // brim stripe
+hat.endFill();
+hat.beginFill(0x8899ff);
+hat.drawCircle(0, -100, 7); // pom-pom
+hat.endFill();
+hat.rotation = -0.15;
+hat.visible = false;
+
 const trailParticles = [];
 const trailContainer = new PIXI.Container();
 app.stage.addChildAt(trailContainer, 0); 
@@ -42,6 +59,7 @@ c.y = app.screen.height / 2;
 app.stage.addChild(c);
 c.addChild(eyeL);
 c.addChild(eyeR);
+c.addChild(hat);
 c.eventMode = 'static';
 c.cursor = 'pointer';
 
@@ -77,7 +95,6 @@ for (let i = 0; i < 3; i++) {
 // sleep zzzz
 
 
-
 // blinking state and a few others
 let blinkTimer = 0;
 let isBlinking = false;
@@ -109,6 +126,96 @@ function lerpColor(color1, color2, t) {
   return (r << 16) + (g << 8) + b;
 }
 
+//retro ambient music
+
+const TRACK_URL = 'chiptune.mp3';
+
+let audioCtx = null;
+let masterGain = null;
+let toneFilter = null;
+let audioBuffer = null;
+let musicSource = null;
+let musicPlaying = false;
+let audioLoading = false;
+let startedAt = 0;   
+let pausedAt = 0;  
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.35;
+  toneFilter = audioCtx.createBiquadFilter();
+  toneFilter.type = 'lowpass';
+  toneFilter.frequency.value = 2200;
+  toneFilter.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
+}
+
+function loadTrack() {
+  audioLoading = true;
+  return fetch(TRACK_URL)
+    .then(res => res.arrayBuffer())
+    .then(data => audioCtx.decodeAudioData(data))
+    .then(buffer => {
+      audioBuffer = buffer;
+      audioLoading = false;
+    })
+    .catch(err => {
+      audioLoading = false;
+      console.error('couldnt load the track:', err);
+    });
+}
+
+function startPlayback(offset) {
+  musicSource = audioCtx.createBufferSource();
+  musicSource.buffer = audioBuffer;
+  musicSource.loop = true;
+  musicSource.playbackRate.value = 1;
+  musicSource.connect(toneFilter);
+  musicSource.start(0, offset % audioBuffer.duration);
+  startedAt = audioCtx.currentTime - offset;
+}
+
+function toggleMusic() {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+
+  if (!musicPlaying) {
+    musicPlaying = true;
+    hat.visible = true;
+    playButton.setPlaying(true);
+
+    if (audioBuffer) {
+      startPlayback(pausedAt);
+    } else if (!audioLoading) {
+      loadTrack().then(() => {
+        if (musicPlaying) startPlayback(pausedAt);
+      });
+    }
+  } else {
+    musicPlaying = false;
+    hat.visible = false;
+    playButton.setPlaying(false);
+
+    if (musicSource) {
+      pausedAt = (audioCtx.currentTime - startedAt) % audioBuffer.duration;
+      musicSource.stop();
+      musicSource.disconnect();
+      musicSource = null;
+    }
+  }
+}
+
+function updateMusic(deltaMS, excitement, loneliness) {
+  if (!musicPlaying || !musicSource) return;
+
+  const targetRate = 0.92 + excitement * 0.18 - loneliness * 0.12;
+  musicSource.playbackRate.value += (targetRate - musicSource.playbackRate.value) * 0.02;
+
+  toneFilter.frequency.value += ((900 + excitement * 3000 - loneliness * 600) - toneFilter.frequency.value) * 0.03;
+  masterGain.gain.value += ((0.35 - loneliness * 0.15) - masterGain.gain.value) * 0.03;
+}
 c.on('pointerdown', () => {
   const now = performance.now();
   
@@ -237,11 +344,13 @@ const squash = (1 - Math.min(speed * 0.015, 0.15)) * (1 - loneliness * 0.2) + br
 }
 
 
-
 const sleepyFactor = loneliness * 0.85;
 const eyeScale = isBlinking ? 0.1 : Math.max(1 - sleepyFactor, 0.15);
 eyeL.scale.y = eyeScale;
 eyeR.scale.y = eyeScale;
+
+updateMusic(app.ticker.deltaMS, excitement, loneliness);
+
 });
 // yesss it works its moving
 
@@ -258,3 +367,47 @@ function hslToHex(h, s, l) {
   else [r, g, b] = [c, 0, x];
   return (Math.round((r + m) * 255) << 16) + (Math.round((g + m) * 255) << 8) + Math.round((b + m) * 255);
 }
+
+
+const playButton = new PIXI.Container();
+const btnBg = new PIXI.Graphics();
+const btnIcon = new PIXI.Text('\u25B6', {
+  fontFamily: 'monospace',
+  fontSize: 16,
+  fill: 0xffffff
+});
+btnIcon.anchor.set(0.5);
+btnIcon.x = 2;
+
+function drawBtnBg(hover) {
+  btnBg.clear();
+  btnBg.beginFill(hover ? 0xff3399 : 0x333344);
+  btnBg.drawRoundedRect(-30, -18, 60, 36, 10);
+  btnBg.endFill();
+}
+drawBtnBg(false);
+
+playButton.addChild(btnBg);
+playButton.addChild(btnIcon);
+playButton.eventMode = 'static';
+playButton.cursor = 'pointer';
+
+playButton.setPlaying = (playing) => {
+  btnIcon.text = playing ? '\u275A\u275A' : '\u25B6';
+  btnIcon.x = playing ? 0 : 2;
+};
+
+playButton.on('pointerover', () => drawBtnBg(true));
+playButton.on('pointerout', () => drawBtnBg(false));
+playButton.on('pointerdown', () => {
+  toggleMusic();
+});
+
+function positionPlayButton() {
+  playButton.x = app.screen.width / 2;
+  playButton.y = app.screen.height - 50;
+}
+positionPlayButton();
+window.addEventListener('resize', positionPlayButton);
+
+app.stage.addChild(playButton);
