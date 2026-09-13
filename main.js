@@ -60,8 +60,23 @@ for (let i = 0; i < GRID_SIZE; i++) {
     }
   }
 }
-
 // making it pixelated and adding some randomness to the pixels
+
+const zzzTexts = [];
+for (let i = 0; i < 3; i++) {
+  const z = new PIXI.Text('z', {
+    fontFamily: 'monospace',
+    fontSize: 14 + i * 4,
+    fill: 0x8899ff
+  });
+  z.anchor.set(0.5);
+  app.stage.addChild(z);
+  zzzTexts.push(z);
+}
+
+// sleep zzzz
+
+
 
 // blinking state and a few others
 let blinkTimer = 0;
@@ -204,9 +219,29 @@ const squash = (1 - Math.min(speed * 0.015, 0.15)) * (1 - loneliness * 0.2) + br
     blinkTimer = 0;
   }
 
-  const eyeScale = isBlinking ? 0.1 : 1;
-  eyeL.scale.y = eyeScale;
-  eyeR.scale.y = eyeScale;
+  if (loneliness > 0.3) {
+  const fadeIn = Math.min((loneliness - 0.3) / 0.3, 1);
+
+  for (let i = 0; i < zzzTexts.length; i++) {
+    const z = zzzTexts[i];
+    z.visible = true;
+
+    const cycle = ((performance.now() * 0.0006) + i * 0.33) % 1;
+
+    z.x = c.x + 30 + i * 14 - cycle * 10;
+    z.y = c.y - 45 - i * 12 - cycle * 25;
+    z.alpha = fadeIn * (1 - cycle);
+  }
+} else {
+  for (const z of zzzTexts) z.visible = false;
+}
+
+
+
+const sleepyFactor = loneliness * 0.85;
+const eyeScale = isBlinking ? 0.1 : Math.max(1 - sleepyFactor, 0.15);
+eyeL.scale.y = eyeScale;
+eyeR.scale.y = eyeScale;
 });
 // yesss it works its moving
 
