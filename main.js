@@ -62,6 +62,7 @@ c.addChild(eyeR);
 c.addChild(hat);
 c.eventMode = 'static';
 c.cursor = 'pointer';
+//drew a hat now lets animate it.
 
 const GRID_SIZE = 20; // more fine-grained grid for pixelation
 const CELL_SIZE = 6; // 6 is better ig
@@ -95,6 +96,7 @@ for (let i = 0; i < 3; i++) {
 // sleep zzzz
 
 
+
 // blinking state and a few others
 let blinkTimer = 0;
 let isBlinking = false;
@@ -107,8 +109,77 @@ let lastClickTime = 0;
 let rainbowTimer = 0;
 let isRainbow = false;
 let rainbowHue = 0;
-// drew a circle and added it to the stage, now lets animate it
+let audioCtx = null;
+let masterGain = null;
+let toneFilter = null;
+let musicPlaying = false;
+let noteTimer = 0;
+let stepIndex = 0;
 
+// music notes and scales
+const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25]; // C4..E5
+const bassScale = [130.81, 146.83, 164.81, 196.00, 220.00]; // one octave down
+
+function initAudio() {
+  if (audioCtx) return;
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.16;
+  toneFilter = audioCtx.createBiquadFilter();
+  toneFilter.type = 'lowpass';
+  toneFilter.frequency.value = 1800;
+  toneFilter.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
+}
+
+function playNote(freq, duration, type, volume) {
+  const osc = audioCtx.createOscillator();
+  const env = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+
+  const now = audioCtx.currentTime;
+  env.gain.setValueAtTime(0, now);
+  env.gain.linearRampToValueAtTime(volume, now + 0.015); // quick attack, no clicks
+  env.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  osc.connect(env);
+  env.connect(toneFilter);
+  osc.start(now);
+  osc.stop(now + duration + 0.05);
+}
+
+function toggleMusic() {
+  initAudio();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  musicPlaying = !musicPlaying;
+  hat.visible = musicPlaying;
+  playButton.setPlaying(musicPlaying);
+}
+
+// called every frame from the ticker with the blob's current mood
+function updateMusic(deltaMS, closeness, loneliness) {
+  if (!musicPlaying) return;
+
+  noteTimer += deltaMS;
+  const chaseFactor = 1 - closeness; // farther away = more chase energy = faster notes
+  const interval = 480 - chaseFactor * 220 + loneliness * 380;
+  if (noteTimer < interval) return;
+  noteTimer = 0;
+
+  toneFilter.frequency.value = 900 + chaseFactor * 2400 - loneliness * 500;
+  masterGain.gain.value = 0.17 - loneliness * 0.06;
+
+  const pattern = [0, 2, 1, 3, 4, 2, 1, 0];
+  stepIndex = (stepIndex + 1) % pattern.length;
+  const note = scale[pattern[stepIndex]];
+  playNote(note, 0.35, 'square', 0.12);
+
+  if (stepIndex % 4 === 0) {
+    const bass = bassScale[pattern[stepIndex] % bassScale.length];
+    playNote(bass, 0.5, 'triangle', 0.09);
+  }
+}
 
 function lerpColor(color1, color2, t) {
   const r1 = (color1 >> 16) & 0xff;
@@ -126,96 +197,6 @@ function lerpColor(color1, color2, t) {
   return (r << 16) + (g << 8) + b;
 }
 
-//retro ambient music
-
-const TRACK_URL = 'chiptune.mp3';
-
-let audioCtx = null;
-let masterGain = null;
-let toneFilter = null;
-let audioBuffer = null;
-let musicSource = null;
-let musicPlaying = false;
-let audioLoading = false;
-let startedAt = 0;   
-let pausedAt = 0;  
-
-function initAudio() {
-  if (audioCtx) return;
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.35;
-  toneFilter = audioCtx.createBiquadFilter();
-  toneFilter.type = 'lowpass';
-  toneFilter.frequency.value = 2200;
-  toneFilter.connect(masterGain);
-  masterGain.connect(audioCtx.destination);
-}
-
-function loadTrack() {
-  audioLoading = true;
-  return fetch(TRACK_URL)
-    .then(res => res.arrayBuffer())
-    .then(data => audioCtx.decodeAudioData(data))
-    .then(buffer => {
-      audioBuffer = buffer;
-      audioLoading = false;
-    })
-    .catch(err => {
-      audioLoading = false;
-      console.error('couldnt load the track:', err);
-    });
-}
-
-function startPlayback(offset) {
-  musicSource = audioCtx.createBufferSource();
-  musicSource.buffer = audioBuffer;
-  musicSource.loop = true;
-  musicSource.playbackRate.value = 1;
-  musicSource.connect(toneFilter);
-  musicSource.start(0, offset % audioBuffer.duration);
-  startedAt = audioCtx.currentTime - offset;
-}
-
-function toggleMusic() {
-  initAudio();
-  if (audioCtx.state === 'suspended') audioCtx.resume();
-
-  if (!musicPlaying) {
-    musicPlaying = true;
-    hat.visible = true;
-    playButton.setPlaying(true);
-
-    if (audioBuffer) {
-      startPlayback(pausedAt);
-    } else if (!audioLoading) {
-      loadTrack().then(() => {
-        if (musicPlaying) startPlayback(pausedAt);
-      });
-    }
-  } else {
-    musicPlaying = false;
-    hat.visible = false;
-    playButton.setPlaying(false);
-
-    if (musicSource) {
-      pausedAt = (audioCtx.currentTime - startedAt) % audioBuffer.duration;
-      musicSource.stop();
-      musicSource.disconnect();
-      musicSource = null;
-    }
-  }
-}
-
-function updateMusic(deltaMS, excitement, loneliness) {
-  if (!musicPlaying || !musicSource) return;
-
-  const targetRate = 0.92 + excitement * 0.18 - loneliness * 0.12;
-  musicSource.playbackRate.value += (targetRate - musicSource.playbackRate.value) * 0.02;
-
-  toneFilter.frequency.value += ((900 + excitement * 3000 - loneliness * 600) - toneFilter.frequency.value) * 0.03;
-  masterGain.gain.value += ((0.35 - loneliness * 0.15) - masterGain.gain.value) * 0.03;
-}
 c.on('pointerdown', () => {
   const now = performance.now();
   
@@ -344,13 +325,13 @@ const squash = (1 - Math.min(speed * 0.015, 0.15)) * (1 - loneliness * 0.2) + br
 }
 
 
+
 const sleepyFactor = loneliness * 0.85;
 const eyeScale = isBlinking ? 0.1 : Math.max(1 - sleepyFactor, 0.15);
 eyeL.scale.y = eyeScale;
 eyeR.scale.y = eyeScale;
 
-updateMusic(app.ticker.deltaMS, excitement, loneliness);
-
+updateMusic(app.ticker.deltaMS, closeness, loneliness);
 });
 // yesss it works its moving
 
@@ -371,13 +352,13 @@ function hslToHex(h, s, l) {
 
 const playButton = new PIXI.Container();
 const btnBg = new PIXI.Graphics();
-const btnIcon = new PIXI.Text('\u25B6', {
+const btnIcon = new PIXI.Text('\u25B6', { // ▶
   fontFamily: 'monospace',
   fontSize: 16,
   fill: 0xffffff
 });
 btnIcon.anchor.set(0.5);
-btnIcon.x = 2;
+btnIcon.x = 2; // optical centering for the triangle glyph
 
 function drawBtnBg(hover) {
   btnBg.clear();
@@ -393,7 +374,7 @@ playButton.eventMode = 'static';
 playButton.cursor = 'pointer';
 
 playButton.setPlaying = (playing) => {
-  btnIcon.text = playing ? '\u275A\u275A' : '\u25B6';
+  btnIcon.text = playing ? '\u275A\u275A' : '\u25B6'; // ❚❚ or ▶
   btnIcon.x = playing ? 0 : 2;
 };
 
