@@ -92,8 +92,44 @@ for (let i = 0; i < 3; i++) {
   app.stage.addChild(z);
   zzzTexts.push(z);
 }
-
 // sleep zzzz
+
+const dncButton = new PIXI.Container();
+const dncBg = new PIXI.Graphics();
+const dncText = new PIXI.Text('don\'t click me', {
+  fontFamily: 'monospace',
+  fontSize: 14,
+  fill: 0xffffff
+});
+dncText.anchor.set(0.5);
+
+function drawDncBg(hover) {
+  dncBg.clear();
+  dncBg.beginFill(hover ? 0xff3399 : 0x333344);
+  dncBg.drawRoundedRect(-70, -18, 140, 36, 10);
+  dncBg.endFill();
+}
+drawDncBg(false);
+
+dncButton.addChild(dncBg);
+dncButton.addChild(dncText);
+dncButton.eventMode = 'static';
+dncButton.cursor = 'pointer';
+
+dncButton.x = app.screen.width / 2;
+dncButton.y = app.screen.height - 100;
+
+dncButton.on('pointerover', () => drawDncBg(true));
+dncButton.on('pointerout', () => drawDncBg(false));
+
+app.stage.addChild(dncButton);
+
+dncButton.on('pointerdown', () => {
+  if (jumpscareArmed || jumpscareActive) return; 
+  jumpscareArmed = true;
+  jumpscareTimer = 2000;
+  dncText.text = 'i warned you!';
+});
 
 
 
@@ -115,7 +151,10 @@ let toneFilter = null;
 let musicPlaying = false;
 let noteTimer = 0;
 let stepIndex = 0;
-
+let jumpscareArmed = false;
+let jumpscareTimer = 0;
+let jumpscareActive = false;
+let jumpscareIntensity = 0;
 // music notes and scales
 const scale = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 587.33, 659.25]; // C4..E5
 const bassScale = [130.81, 146.83, 164.81, 196.00, 220.00]; // one octave down
@@ -124,7 +163,7 @@ function initAudio() {
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.16;
+  masterGain.gain.value = 1;
   toneFilter = audioCtx.createBiquadFilter();
   toneFilter.type = 'lowpass';
   toneFilter.frequency.value = 1800;
@@ -168,7 +207,7 @@ function updateMusic(deltaMS, closeness, loneliness) {
   noteTimer = 0;
 
   toneFilter.frequency.value = 900 + chaseFactor * 2400 - loneliness * 500;
-  masterGain.gain.value = 0.17 - loneliness * 0.06;
+  masterGain.gain.value = 1 - loneliness * 0.2;
 
   const pattern = [0, 2, 1, 3, 4, 2, 1, 0];
   stepIndex = (stepIndex + 1) % pattern.length;
@@ -226,6 +265,23 @@ app.ticker.add(() => {
     if (rainbowTimer <= 0) isRainbow = false;
   }
 
+  if (jumpscareArmed) {
+    jumpscareTimer -= app.ticker.deltaMS;
+    if (jumpscareTimer <= 0) {
+      jumpscareArmed = false;
+      jumpscareActive = true;
+      jumpscareIntensity = 1;
+    }
+  }
+
+  if (jumpscareActive) {
+    jumpscareIntensity -= app.ticker.deltaMS / 400;
+    if (jumpscareIntensity <= 0) {
+      jumpscareActive = false;
+      dncText.text = 'don\'t click me';
+    }
+  }
+
   const dx = mouse.x - c.x;
   const dy = mouse.y - c.y;
 
@@ -244,6 +300,10 @@ app.ticker.add(() => {
   if (isRainbow) {
     rainbowHue = (rainbowHue + 4) % 360;
     bodyColor = hslToHex(rainbowHue, 0.8, 0.6);
+  }
+
+  if (jumpscareActive) {
+    bodyColor = lerpColor(bodyColor, 0xff0000, jumpscareIntensity);
   }
 
   if (speed > 1) {
@@ -288,6 +348,11 @@ c.endFill();
   c.x += dx * 0.05;
   c.y += dy * 0.05;
 
+  if (jumpscareActive) {
+    c.x += (Math.random() - 0.5) * 20 * jumpscareIntensity;
+    c.y += (Math.random() - 0.5) * 20 * jumpscareIntensity;
+  }
+
   const stretch = (1 + Math.min(speed * 0.02, 0.3)) * (1 - loneliness * 0.2) + breathe;
 const squash = (1 - Math.min(speed * 0.015, 0.15)) * (1 - loneliness * 0.2) + breathe;
 
@@ -327,7 +392,10 @@ const squash = (1 - Math.min(speed * 0.015, 0.15)) * (1 - loneliness * 0.2) + br
 
 
 const sleepyFactor = loneliness * 0.85;
-const eyeScale = isBlinking ? 0.1 : Math.max(1 - sleepyFactor, 0.15);
+let eyeScale = isBlinking ? 0.1 : Math.max(1 - sleepyFactor, 0.15);
+if (jumpscareActive) {
+  eyeScale = 1 + jumpscareIntensity * 2.5;
+}
 eyeL.scale.y = eyeScale;
 eyeR.scale.y = eyeScale;
 
