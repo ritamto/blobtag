@@ -131,7 +131,95 @@ dncButton.on('pointerdown', () => {
   dncText.text = 'i warned you!';
 });
 
+const infoButton = new PIXI.Container();
+const infoBg = new PIXI.Graphics();
+const infoIcon = new PIXI.Text('i', {
+  fontFamily: 'monospace',
+  fontSize: 16,
+  fontStyle: 'italic',
+  fill: 0xffffff
+});
+infoIcon.anchor.set(0.5);
+infoIcon.y = -1;
 
+function drawInfoBg(hover) {
+  infoBg.clear();
+  infoBg.beginFill(hover ? 0xff3399 : 0x333344);
+  infoBg.drawCircle(0, 0, 16);
+  infoBg.endFill();
+}
+drawInfoBg(false);
+
+infoButton.addChild(infoBg);
+infoButton.addChild(infoIcon);
+infoButton.eventMode = 'static';
+infoButton.cursor = 'pointer';
+
+infoButton.x = 40;
+infoButton.y = 40;
+
+infoButton.on('pointerover', () => drawInfoBg(true));
+infoButton.on('pointerout', () => drawInfoBg(false));
+
+app.stage.addChild(infoButton);
+
+const creditsPanel = new PIXI.Container();
+const creditsBg = new PIXI.Graphics();
+creditsBg.beginFill(0x1a1a24, 0.95);
+creditsBg.drawRoundedRect(-140, -60, 280, 120, 12);
+creditsBg.endFill();
+
+const creditsTitle = new PIXI.Text('Blobtag', {
+  fontFamily: 'monospace',
+  fontSize: 16,
+  fill: 0xffffff,
+  fontWeight: 'bold'
+});
+creditsTitle.anchor.set(0.5);
+creditsTitle.y = -35;
+
+const creditsBy = new PIXI.Text('made by Ritam Misra', {
+  fontFamily: 'monospace',
+  fontSize: 12,
+  fill: 0xaaaaaa
+});
+creditsBy.anchor.set(0.5);
+creditsBy.y = -10;
+
+const creditsFor = new PIXI.Text('for Hack Club Tagless', {
+  fontFamily: 'monospace',
+  fontSize: 12,
+  fill: 0xaaaaaa
+});
+creditsFor.anchor.set(0.5);
+creditsFor.y = 8;
+
+const creditsLink = new PIXI.Text('github repo ->', {
+  fontFamily: 'monospace',
+  fontSize: 13,
+  fill: 0x8899ff
+});
+creditsLink.anchor.set(0.5);
+creditsLink.y = 35;
+creditsLink.eventMode = 'static';
+creditsLink.cursor = 'pointer';
+
+creditsPanel.addChild(creditsBg, creditsTitle, creditsBy, creditsFor, creditsLink);
+creditsPanel.x = 150;
+creditsPanel.y = 40;
+creditsPanel.visible = false;
+
+app.stage.addChild(creditsPanel);
+
+creditsLink.on('pointerdown', () => {
+  window.open('https://github.com/ritamto/blobtag', '_blank');
+});
+
+infoButton.on('pointerdown', () => {
+  creditsPanel.visible = !creditsPanel.visible;
+});
+
+// info
 
 // blinking state and a few others
 let blinkTimer = 0;
