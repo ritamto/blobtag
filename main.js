@@ -45,6 +45,24 @@ c.addChild(eyeR);
 c.eventMode = 'static';
 c.cursor = 'pointer';
 
+const GRID_SIZE = 20; // more fine-grained grid for pixelation
+const CELL_SIZE = 6; // 6 is better ig
+const BODY_RADIUS = 60;
+
+const pixelGrid = [];
+for (let i = 0; i < GRID_SIZE; i++) {
+  for (let j = 0; j < GRID_SIZE; j++) {
+    const px = (i - GRID_SIZE / 2 + 0.5) * CELL_SIZE;
+    const py = (j - GRID_SIZE / 2 + 0.5) * CELL_SIZE;
+    const dist = Math.sqrt(px * px + py * py);
+    if (dist <= BODY_RADIUS) {
+      pixelGrid.push({ x: px, y: py });
+    }
+  }
+}
+
+// making it pixelated and adding some randomness to the pixels
+
 // blinking state and a few others
 let blinkTimer = 0;
 let isBlinking = false;
@@ -92,6 +110,8 @@ c.on('pointerdown', () => {
     clickCount = 0;
   }
 });
+
+// TICKER
 
 app.ticker.add(() => {
   const idleTime = performance.now() - lastMoveTime;
@@ -156,9 +176,11 @@ app.ticker.add(() => {
   }
 
   c.clear();
-  c.beginFill(bodyColor);
-  c.drawCircle(0, 0, 60);
-  c.endFill();
+c.beginFill(bodyColor);
+for (const cell of pixelGrid) {
+  c.drawRect(cell.x - CELL_SIZE / 2, cell.y - CELL_SIZE / 2, CELL_SIZE, CELL_SIZE);
+}
+c.endFill();
 
   c.x += dx * 0.05;
   c.y += dy * 0.05;
