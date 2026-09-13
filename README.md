@@ -2,7 +2,7 @@
 
 A tiny reactive blob creature built with PixiJS. No HTML tags used. Built for Hack Club's Tagless.
 
-
+![Blobtag screenshot](screenshot.png)
 
 **[Try it live →](https://blobtag.pages.dev/)**
 
