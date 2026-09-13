@@ -112,11 +112,11 @@ c.on('pointerdown', () => {
 });
 
 // TICKER
-
 app.ticker.add(() => {
+  const breathe = Math.sin(performance.now() * 0.002) * 0.03;
   const idleTime = performance.now() - lastMoveTime;
-  const isLonely = idleTime > 4500;
-  const loneliness = isLonely ? Math.min((idleTime - 4500) / 3000, 1) : 0;
+  const isLonely = idleTime > 15000;
+  const loneliness = isLonely ? Math.min((idleTime - 15000) / 3000, 1) : 0;
 
   if (isRainbow) {
     rainbowTimer -= app.ticker.deltaMS;
@@ -185,8 +185,8 @@ c.endFill();
   c.x += dx * 0.05;
   c.y += dy * 0.05;
 
-  const stretch = (1 + Math.min(speed * 0.02, 0.3)) * (1 - loneliness * 0.2);
-  const squash = (1 - Math.min(speed * 0.015, 0.15)) * (1 - loneliness * 0.2);
+  const stretch = (1 + Math.min(speed * 0.02, 0.3)) * (1 - loneliness * 0.2) + breathe;
+const squash = (1 - Math.min(speed * 0.015, 0.15)) * (1 - loneliness * 0.2) + breathe;
 
   c.scale.x += (stretch - c.scale.x) * 0.2;
   c.scale.y += (squash - c.scale.y) * 0.2;
