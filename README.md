@@ -39,7 +39,7 @@ Tagless only allows `<html>`, `<head>`, `<body>`, `<meta>`, `<title>`, `<script>
 Clone the repo and just open `index.html` in a browser.
 ## a small note
 
-My local Hackatime project is tracked under a different name than this repo (`tagless`, not `blobtag`). That is because i made thelocal project and i renamed it but then it made a new project in hHackatime
+My local Hackatime project is tracked under a different name than this repo (`tagless`, not `blobtag`). That is because I made the local project and i renamed it but then it made a new project in Hackatime and started tracking time for it.
 ## made by
 
 Ritam Misra for [Hack Club's Tagless](https://tagless.hackclub.com/)
