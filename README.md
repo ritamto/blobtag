@@ -27,7 +27,7 @@ It's rendered as blocky pixel art instead of a smooth shape, leaves a trail of s
 
 ## the constraint
 
-Tagless only allows `<html>`, `<head>`, `<body>`, `<meta>`, `<title>`, `<script>`, `<style>`, and `<canvas>` as literal tags — everything else has to be built without writing HTML markup directly. So the canvas is mounted via `document.body.appendChild()`, the favicon is injected with `document.createElement('link')`, and every button/panel/piece of UI you see is a PixiJS object built and drawn through JS, it was hard to learn.
+Tagless only allows `<html>`, `<head>`, `<body>`, `<meta>`, `<title>`, `<script>`, `<style>`, and `<canvas>` as literal tags — everything else has to be built without writing HTML markup directly. So the canvas is mounted via `document.body.appendChild()`, the favicon is injected with `document.createElement('link')`, and every button/panel/piece of UI you see is a PixiJS object built and drawn through JS, which took some getting used to.
 ## built with
 
 - [PixiJS](https://pixijs.com/) for rendering
@@ -39,7 +39,8 @@ Tagless only allows `<html>`, `<head>`, `<body>`, `<meta>`, `<title>`, `<script>
 Clone the repo and just open `index.html` in a browser.
 ## a small note
 
-My local Hackatime project is tracked under a different name than this repo (`tagless`, not `blobtag`). That is because I made the local project and i renamed it but then it made a new project in Hackatime and started tracking time for it.
+My local Hackatime project is tracked as tagless, not blobtag. I originally built this under the tagless folder name, and when I renamed the local folder to blobtag, Hackatime treated it as a brand-new project instead of renaming the existing one, so my logged hours are still under tagless.
+
 ## made by
 
 Ritam Misra for [Hack Club's Tagless](https://tagless.hackclub.com/)
