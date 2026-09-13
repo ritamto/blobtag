@@ -266,13 +266,17 @@ app.ticker.add(() => {
   }
 
   if (jumpscareArmed) {
-    jumpscareTimer -= app.ticker.deltaMS;
-    if (jumpscareTimer <= 0) {
-      jumpscareArmed = false;
-      jumpscareActive = true;
-      jumpscareIntensity = 1;
-    }
+  jumpscareTimer -= app.ticker.deltaMS;
+  if (jumpscareTimer <= 0) {
+    jumpscareArmed = false;
+    jumpscareActive = true;
+    jumpscareIntensity = 1;
+    initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    playNote(90, 0.4, 'sawtooth', 0.5);
+    playNote(95, 0.4, 'sawtooth', 0.5);
   }
+}
 
   if (jumpscareActive) {
     jumpscareIntensity -= app.ticker.deltaMS / 400;
@@ -358,6 +362,11 @@ const squash = (1 - Math.min(speed * 0.015, 0.15)) * (1 - loneliness * 0.2) + br
 
   c.scale.x += (stretch - c.scale.x) * 0.2;
   c.scale.y += (squash - c.scale.y) * 0.2;
+if (jumpscareActive) {
+  const lurch = 1 + jumpscareIntensity * 0.6;
+  c.scale.x *= lurch;
+  c.scale.y *= lurch;
+}
 
   blinkTimer += app.ticker.deltaMS;
 
@@ -390,13 +399,25 @@ const squash = (1 - Math.min(speed * 0.015, 0.15)) * (1 - loneliness * 0.2) + br
 }
 
 
-
 const sleepyFactor = loneliness * 0.85;
 let eyeScale = isBlinking ? 0.1 : Math.max(1 - sleepyFactor, 0.15);
+let eyeColor = 0x0a0a12;
+
 if (jumpscareActive) {
   eyeScale = 1 + jumpscareIntensity * 2.5;
+  eyeColor = 0xffffff;
 }
+
+eyeL.clear();
+eyeL.beginFill(eyeColor);
+eyeL.drawCircle(-18, -5, 4);
+eyeL.endFill();
 eyeL.scale.y = eyeScale;
+
+eyeR.clear();
+eyeR.beginFill(eyeColor);
+eyeR.drawCircle(18, -5, 4);
+eyeR.endFill();
 eyeR.scale.y = eyeScale;
 
 updateMusic(app.ticker.deltaMS, closeness, loneliness);
