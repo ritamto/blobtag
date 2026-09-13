@@ -27,11 +27,11 @@ It's rendered as blocky pixel art instead of a smooth shape, leaves a trail of s
 
 ## the constraint
 
-Tagless only allows `<html>`, `<head>`, `<body>`, `<meta>`, `<title>`, `<script>`, `<style>`, and `<canvas>` as literal tags — everything else has to be built without writing HTML markup directly. So the canvas is mounted via `document.body.appendChild()`, the favicon is injected with `document.createElement('link')`, and every button/panel/piece of UI you see is a PixiJS object built and drawn through JS, it was hard t o learn.
+Tagless only allows `<html>`, `<head>`, `<body>`, `<meta>`, `<title>`, `<script>`, `<style>`, and `<canvas>` as literal tags — everything else has to be built without writing HTML markup directly. So the canvas is mounted via `document.body.appendChild()`, the favicon is injected with `document.createElement('link')`, and every button/panel/piece of UI you see is a PixiJS object built and drawn through JS, it was hard to learn.
 ## built with
 
 - [PixiJS](https://pixijs.com/) for rendering
-- the Web Audio API for the music (i made no audiofil s. eevery note is generated in real time)
+- the Web Audio API for the music (i made no audio files. Every note is generated in real time)
 - vanilla Javascript
 
 ## running it locally
