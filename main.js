@@ -194,26 +194,22 @@ const creditsFor = new PIXI.Text('for Hack Club Tagless', {
 creditsFor.anchor.set(0.5);
 creditsFor.y = 8;
 
-const creditsLink = new PIXI.Text('github repo ->', {
+const creditThanks = new PIXI.Text('Thanks for playing!', {
   fontFamily: 'monospace',
   fontSize: 13,
-  fill: 0x8899ff
+  fill: 0xaaaaaa
 });
-creditsLink.anchor.set(0.5);
-creditsLink.y = 35;
-creditsLink.eventMode = 'static';
-creditsLink.cursor = 'pointer';
+creditThanks.anchor.set(0.5);
+creditThanks.y = 35;
 
-creditsPanel.addChild(creditsBg, creditsTitle, creditsBy, creditsFor, creditsLink);
+
+creditsPanel.addChild(creditsBg, creditsTitle, creditsBy, creditsFor, creditThanks);
 creditsPanel.x = 150;
 creditsPanel.y = 40;
 creditsPanel.visible = false;
 
 app.stage.addChild(creditsPanel);
 
-creditsLink.on('pointerdown', () => {
-  window.open('https://github.com/ritamto/blobtag', '_blank');
-});
 
 infoButton.on('pointerdown', () => {
   creditsPanel.visible = !creditsPanel.visible;
@@ -284,12 +280,12 @@ function toggleMusic() {
   playButton.setPlaying(musicPlaying);
 }
 
-// called every frame from the ticker with the blob's current mood
+// 
 function updateMusic(deltaMS, closeness, loneliness) {
   if (!musicPlaying) return;
 
   noteTimer += deltaMS;
-  const chaseFactor = 1 - closeness; // farther away = more chase energy = faster notes
+  const chaseFactor = 1 - closeness; // farther away = more chase energy = faster notes (it was sounding creepy)
   const interval = 480 - chaseFactor * 220 + loneliness * 380;
   if (noteTimer < interval) return;
   noteTimer = 0;
@@ -336,7 +332,7 @@ c.on('pointerdown', () => {
 
   if (clickCount >= 3) {
     isRainbow = true;
-    rainbowTimer = 3000; // 3 seconds of rainbow
+    rainbowTimer = 3000; 
     clickCount = 0;
   }
 });
