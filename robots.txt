@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://blobtag.pages.dev/sitemap.xml
