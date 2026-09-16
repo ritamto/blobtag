@@ -12,16 +12,7 @@ document.head.appendChild(link);
 document.body.appendChild(app.view);
 
 const mouse = { x: 0, y: 0 };
-function addLink(rel, href, type) {
-  const link = document.createElement('link');
-  link.rel = rel;
-  if (type) link.type = type;
-  link.href = href;
-  document.head.appendChild(link);
-}
 
-addLink('canonical', 'https://blobtag.pages.dev/');
-addLink('icon', '/favicon.svg', 'image/svg+xml');
 window.addEventListener('pointermove', (e) => {
   mouse.x = e.clientX;
   mouse.y = e.clientY;
